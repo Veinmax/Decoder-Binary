@@ -80,4 +80,3 @@ uvicorn main:app --reload
 3. Modify the temperature and test results in the editor section.
 4. Click "Save Changes" to save data in session.
 5. Click "Download Modified File" to download the modified binary file.
-6. # Decoder-Binary
