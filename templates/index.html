@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Data Editor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Test Data Editor</h1>
+        <div class="upload-section">
+            <input type="file" id="fileInput" style="display:none;" onchange="handleFileSelection()" />
+            <button id="uploadBtn" onclick="triggerFileSelection()">Upload Binary File</button>
+            <span id="uploadStatus"></span>
+            <br /><br />
+            <button id="decodeBtn" onclick="decodeFile()" disabled>Decode Binary File</button>
+            <span id="decodeStatus"></span>
+        </div>
+
+        <div id="editor" class="editor-section" style="display: none;">
+            <div class="temperature-section">
+                <h2>Temperature (°C)</h2>
+                <label for="temperature">Temperature:</label>
+                <input type="number" id="temperature" step="0.1" class="temp-input" />
+            </div>
+
+            <div class="test-results">
+                <h2>Test Results</h2>
+                <table id="testResults">
+                    <thead>
+                        <tr>
+                            <th>Test Name</th>
+                            <th>Value</th>
+                            <th>Pass/Fail</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="actions">
+                <button onclick="saveChanges()" class="btn-save">Save Changes</button>
+                <button onclick="downloadFile()" class="btn-download">Download Modified File</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null
+        let selectedFile = null
+
+        function triggerFileSelection() {
+            document.getElementById('fileInput').click()
+        }
+
+        function handleFileSelection() {
+            const fileInput = document.getElementById('fileInput')
+            const uploadStatus = document.getElementById('uploadStatus')
+            if (fileInput.files.length === 0) {
+                uploadStatus.textContent = "No file chosen"
+                selectedFile = null
+                return
+            }
+            selectedFile = fileInput.files[0]
+            uploadBinaryFile()
+        }
+
+        async function uploadBinaryFile() {
+            const uploadStatus = document.getElementById('uploadStatus')
+            const decodeBtn = document.getElementById('decodeBtn')
+            if (!selectedFile) {
+                uploadStatus.textContent = "No file chosen"
+                return
+            }
+            try {
+                const formData = new FormData()
+                formData.append('file', selectedFile)
+                uploadStatus.textContent = "Uploading..."
+                const response = await fetch('/upload', { method: 'POST', body: formData })
+                if (!response.ok) {
+                    throw new Error("Upload failed")
+                }
+                uploadStatus.textContent = "File uploaded successfully: " + selectedFile.name
+                decodeBtn.disabled = false
+            } catch (error) {
+                uploadStatus.textContent = "Upload failed"
+            }
+        }
+
+        async function decodeFile() {
+            const decodeStatus = document.getElementById('decodeStatus')
+            decodeStatus.textContent = "Decoding..."
+            try {
+                const response = await fetch('/data')
+                if (!response.ok) {
+                    throw new Error("Decoding failed")
+                }
+                currentData = await response.json()
+                decodeStatus.textContent = "File decoded successfully"
+                document.getElementById('editor').style.display = 'block'
+                document.getElementById('temperature').value = currentData.temperature
+                const tbody = document.querySelector('#testResults tbody')
+                tbody.innerHTML = currentData.test_results.map(test => `
+                    <tr>
+                        <td><input value="${test.test_name}" class="test-name" readonly /></td>
+                        <td><input type="number" value="${test.test_value}" step="0.01" class="test-value" /></td>
+                        <td>
+                            <select class="pass-fail">
+                                <option value="1" ${test.pass_fail ? 'selected' : ''}>Pass</option>
+                                <option value="0" ${!test.pass_fail ? 'selected' : ''}>Fail</option>
+                            </select>
+                        </td>
+                    </tr>
+                `).join('')
+            } catch (error) {
+                decodeStatus.textContent = "Decoding failed"
+            }
+        }
+
+        async function saveChanges() {
+            const updates = Array.from(document.querySelectorAll('#testResults tbody tr')).map(row => {
+                return {
+                    test_name: row.querySelector('.test-name').value,
+                    test_value: parseFloat(row.querySelector('.test-value').value),
+                    pass_fail: parseInt(row.querySelector('.pass-fail').value)
+                }
+            })
+            await fetch('/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    temperature: parseFloat(document.getElementById('temperature').value),
+                    test_results: updates
+                })
+            })
+            alert('Changes saved successfully!')
+        }
+
+        function downloadFile() {
+            window.location.href = '/download'
+        }
+    </script>
+</body>
+</html>

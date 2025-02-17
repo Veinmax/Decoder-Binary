@@ -1,0 +1,63 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.upload-section {
+    margin-bottom: 20px;
+}
+
+.editor-section {
+    margin-top: 20px;
+}
+
+.temperature-section {
+    margin-bottom: 20px;
+}
+
+.temp-input {
+    width: 120px;
+    padding: 5px;
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    text-align: center;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+input, select {
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.btn-save, .btn-download {
+    padding: 8px 16px;
+    margin-left: 10px;
+    cursor: pointer;
+}
